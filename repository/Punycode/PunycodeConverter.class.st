@@ -105,7 +105,8 @@ PunycodeConverter >> encode: aURLString [
 	output := WriteStream on: String new.
 	output nextPutAll: 'xn--'.
 	basicCodePoints do: [ :c | output nextPut: c ].
-	output nextPut: $-.
+	basicCodePoints isEmpty not
+		ifTrue: [ output nextPut: $- ].
 	input := aURLString.
 	delta := 0.
 	h := b := basicCodePoints size.
