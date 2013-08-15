@@ -29,21 +29,16 @@ PunycodeConverter >> adaptDelta: deltaValue numpoints: numpoints firsttime: firs
 	^ k + ((base - tmin + 1) * delta // (delta + skew))
 ]
 
-{ #category : #constants }
-PunycodeConverter >> base [
-	^ 36
-]
-
 { #category : #'initialize-release' }
 PunycodeConverter >> caseSensitive [
 	caseSensitive := true
 ]
 
 { #category : #converting }
-PunycodeConverter >> decode: aURLString [
+PunycodeConverter >> decode: aString [
 	| t i oldi w k output input |
 	self reset.
-	input := aURLString readStream.
+	input := aString readStream.
 	output := WriteStream on: String new.
 	output nextPutAll: (input upToAll: 'xn--').
 	output nextPutAll: (input upTo: $-).
@@ -91,23 +86,18 @@ PunycodeConverter >> decodeDigit: codePoint [
 						ifFalse: [ ^ base ] ] ]
 ]
 
-{ #category : #constants }
-PunycodeConverter >> delimiter [
-	^ $-
-]
-
 { #category : #converting }
-PunycodeConverter >> encode: aURLString [
+PunycodeConverter >> encode: aString [
 	| t h b basicCodePoints nonBasicCodePoints input output delta q k m flag |
 	self reset.
-	basicCodePoints := aURLString select: [ :c | c isOctetCharacter ].
-	nonBasicCodePoints := (aURLString reject: [ :c | c isOctetCharacter ]) asSortedCollection.
+	basicCodePoints := aString select: [ :c | c isOctetCharacter ].
+	nonBasicCodePoints := (aString reject: [ :c | c isOctetCharacter ]) asSortedCollection.
 	output := WriteStream on: String new.
 	output nextPutAll: 'xn--'.
 	basicCodePoints do: [ :c | output nextPut: c ].
 	basicCodePoints isEmpty not
 		ifTrue: [ output nextPut: $- ].
-	input := aURLString.
+	input := aString.
 	delta := 0.
 	h := b := basicCodePoints size.
 	[ h < input size ]
@@ -169,11 +159,6 @@ PunycodeConverter >> encodeDigit: d flag: num [
 	num ~= 0
 		ifTrue: [ codePoint := codePoint - (1 bitShift: 5) ].
 	^ codePoint
-]
-
-{ #category : #constants }
-PunycodeConverter >> initialBias [
-	^ 72
 ]
 
 { #category : #'initialize-release' }
