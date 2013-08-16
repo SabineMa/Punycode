@@ -36,12 +36,17 @@ PunycodeConverter >> caseSensitive [
 
 { #category : #converting }
 PunycodeConverter >> decode: aString [
-	| t i oldi w k output input |
+	| t i oldi w k output input oldPosition |
 	self reset.
 	input := aString readStream.
 	output := WriteStream on: String new.
 	output nextPutAll: (input upToAll: 'xn--').
-	output nextPutAll: (input upTo: $-).
+	oldPosition := input position.
+	(input match: '-')
+		ifTrue: [ 
+			input position: oldPosition.
+			output nextPutAll: (input upTo: $-) ]
+		ifFalse: [ input position: oldPosition ].
 	output := output contents asOrderedCollection.
 	i := 0.
 	[ input atEnd ]
@@ -90,8 +95,9 @@ PunycodeConverter >> decodeDigit: codePoint [
 PunycodeConverter >> encode: aString [
 	| t h b basicCodePoints nonBasicCodePoints input output delta q k m flag |
 	self reset.
-	basicCodePoints := aString select: [ :c | c isOctetCharacter ].
-	nonBasicCodePoints := (aString reject: [ :c | c isOctetCharacter ]) asSortedCollection.
+	basicCodePoints := aString select: [ :c | c lowercase >= $a & (c lowercase <= $z) | (c >= $0 & (c <= $9)) ].
+	nonBasicCodePoints := (aString reject: [ :c | c lowercase >= $a & (c lowercase <= $z) | (c >= $0 & (c <= $9)) ])
+		asSortedCollection.
 	output := WriteStream on: String new.
 	output nextPutAll: 'xn--'.
 	basicCodePoints do: [ :c | output nextPut: c ].
