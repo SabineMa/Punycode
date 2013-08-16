@@ -1,3 +1,7 @@
+"
+see
+http://tools.ietf.org/html/rfc3492
+"
 Class {
 	#name : #PunycodeConverter,
 	#superclass : #Object,
@@ -40,12 +44,12 @@ PunycodeConverter >> decode: aString [
 	self reset.
 	input := aString readStream.
 	output := WriteStream on: String new.
-	output nextPutAll: (input upToAll: 'xn--').
+	output nextPutAll: (input upToAll: self prefix).
 	oldPosition := input position.
-	(input match: '-')
+	(input match: self delimiter)
 		ifTrue: [ 
 			input position: oldPosition.
-			output nextPutAll: (input upTo: $-) ]
+			output nextPutAll: (input upToAll: self delimiter) ]
 		ifFalse: [ input position: oldPosition ].
 	output := output contents asOrderedCollection.
 	i := 0.
@@ -91,6 +95,11 @@ PunycodeConverter >> decodeDigit: codePoint [
 						ifFalse: [ ^ base ] ] ]
 ]
 
+{ #category : #constants }
+PunycodeConverter >> delimiter [
+	^ '-' copy
+]
+
 { #category : #converting }
 PunycodeConverter >> encode: aString [
 	| t h b basicCodePoints nonBasicCodePoints input output delta q k m flag |
@@ -99,7 +108,7 @@ PunycodeConverter >> encode: aString [
 	nonBasicCodePoints := (aString reject: [ :c | c lowercase >= $a & (c lowercase <= $z) | (c >= $0 & (c <= $9)) ])
 		asSortedCollection.
 	output := WriteStream on: String new.
-	output nextPutAll: 'xn--'.
+	output nextPutAll: self prefix.
 	basicCodePoints do: [ :c | output nextPut: c ].
 	basicCodePoints isEmpty not
 		ifTrue: [ output nextPut: $- ].
