@@ -18,7 +18,7 @@ Class {
 	#category : #Punycode
 }
 
-{ #category : #helper }
+{ #category : #private }
 PunycodeConverter >> adaptDelta: deltaValue numpoints: numpoints firsttime: firsttime [
 	| k |
 	firsttime
@@ -82,7 +82,7 @@ PunycodeConverter >> decode: aString [
 	^ String withAll: output
 ]
 
-{ #category : #helper }
+{ #category : #private }
 PunycodeConverter >> decodeDigit: codePoint [
 	codePoint - 48 < 10
 		ifTrue: [ ^ codePoint - 22 ]
@@ -102,16 +102,18 @@ PunycodeConverter >> delimiter [
 
 { #category : #converting }
 PunycodeConverter >> encode: aString [
-	| t h b basicCodePoints nonBasicCodePoints input output delta q k m flag |
+	| t h b basicCodePoints nonBasicCodePoints input output delta q k m flag basicCharacters |
 	self reset.
-	basicCodePoints := aString select: [ :c | c lowercase >= $a & (c lowercase <= $z) | (c >= $0 & (c <= $9)) ].
-	nonBasicCodePoints := (aString reject: [ :c | c lowercase >= $a & (c lowercase <= $z) | (c >= $0 & (c <= $9)) ])
-		asSortedCollection.
+	basicCharacters := 'abcdefghijklmnopqrstuvwxyz0123456789-'.
+	basicCodePoints := aString select: [ :c | basicCharacters includes: c lowercase ].
+	nonBasicCodePoints := (aString reject: [ :c | basicCharacters includes: c lowercase ]) asSortedCollection.
+	nonBasicCodePoints isEmpty
+		ifTrue: [ ^ aString ].
 	output := WriteStream on: String new.
 	output nextPutAll: self prefix.
 	basicCodePoints do: [ :c | output nextPut: c ].
 	basicCodePoints isEmpty not
-		ifTrue: [ output nextPut: $- ].
+		ifTrue: [ output nextPutAll: self delimiter ].
 	input := aString.
 	delta := 0.
 	h := b := basicCodePoints size.
@@ -154,7 +156,7 @@ PunycodeConverter >> encode: aString [
 	^ output contents
 ]
 
-{ #category : #helper }
+{ #category : #private }
 PunycodeConverter >> encodeBasic: bcp flag: num [
 	| codePoint |
 	codePoint := bcp.
@@ -165,7 +167,7 @@ PunycodeConverter >> encodeBasic: bcp flag: num [
 	^ codePoint
 ]
 
-{ #category : #helper }
+{ #category : #private }
 PunycodeConverter >> encodeDigit: d flag: num [
 	| codePoint |
 	codePoint := d + 22.
@@ -198,7 +200,7 @@ PunycodeConverter >> prefix [
 	^ 'xn--' copy
 ]
 
-{ #category : #helper }
+{ #category : #private }
 PunycodeConverter >> reset [
 	self initialize
 ]
