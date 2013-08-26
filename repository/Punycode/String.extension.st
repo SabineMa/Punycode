@@ -7,11 +7,9 @@ String >> encodePunycode [
 
 { #category : #'*Punycode' }
 String >> hasNonBasicCharacter [
-	| basicCharacters |
-	basicCharacters := 'abcdefghijklmnopqrstuvwxyz0123456789-'.
 	self
-		do: [ :char | 
-			(basicCharacters includes: char lowercase)
+		do: [ :c | 
+			c isSafeForHTTP
 				ifFalse: [ ^ true ] ].
 	^ false
 ]
